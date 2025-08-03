@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trigonometry Explorer (Dual Model)</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap');
         :root {
             --bg-color: #000000;
             --canvas-bg-color: #1a1a1a;
@@ -25,7 +26,7 @@
         }
 
         body {
-            font-family: Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color);
+            font-family: 'Space Grotesk', sans-serif; background-color: var(--bg-color); color: var(--text-color);
             margin: 0; overflow-y: auto; /* Allow scrolling */
             display: flex; justify-content: flex-start; align-items: center;
             min-height: 100vh; flex-direction: column;
@@ -127,13 +128,6 @@
         <canvas id="trigCanvas"></canvas>
         <div class="controls">
             <h2>Trigonometry Explorer</h2>
-
-            <div class="model-switcher">
-                <input type="radio" name="model" id="model_tan_sec" value="tan_sec" checked>
-                <label for="model_tan_sec">Tangent & Secant</label>
-                <input type="radio" name="model" id="model_cot_csc" value="cot_csc">
-                <label for="model_cot_csc">Cotangent & Cosecant</label>
-            </div>
 
             <div class="slider-container">
                 <label>Angle θ: <span id="angleValue">40.0°</span></label>
