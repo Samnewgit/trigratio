@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Trigonometry Explorer – All Six Ratios</title>
+    <title>Trigonometry Explorer – Unlimited Rotation</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap');
         :root {
@@ -216,8 +216,9 @@
             const canvas = document.getElementById('trigCanvas');
             const ctx = canvas.getContext('2d');
             const DEFAULT_ANGLE = 40;
-            let angleDeg = DEFAULT_ANGLE;
+            let angleDeg = DEFAULT_ANGLE;  // can now be any real number (e.g., 400, -100)
             let isDragging = false;
+            let lastMouseAngleRad = 0;
 
             const ui = {
                 angleValueSpan: document.getElementById('angleValue'),
@@ -281,7 +282,6 @@
                 const pX = originX + cos * unitRadius;
                 const pY = originY - sin * unitRadius;
 
-                // Helper to check if a value is finite and not too large to draw
                 const canDraw = (val) => isFinite(val) && Math.abs(val * unitRadius) < Math.max(W, H) * 2;
 
                 // 1. Cosine (horizontal leg)
@@ -387,6 +387,7 @@
             // ---------- MAIN DRAW FUNCTION ----------
             function drawSimulation(currentAngleDeg) {
                 if (!W) return;
+                // Compute trigonometric values using the actual angle (periodic functions handle large values)
                 const angleRad = currentAngleDeg * Math.PI / 180;
                 const epsilon = 1e-10;
                 const values = {
@@ -404,14 +405,14 @@
                 const pX = originX + values.cos * unitRadius;
                 const pY = originY - values.sin * unitRadius;
 
-                // Draw unit circle
+                // Unit circle
                 ctx.strokeStyle = style.getPropertyValue('--circle-color');
                 ctx.lineWidth = 2.5;
                 ctx.beginPath();
                 ctx.arc(originX, originY, unitRadius, 0, 2 * Math.PI);
                 ctx.stroke();
 
-                // Draw vertical & horizontal lines at ±R (dashed)
+                // Dashed lines at ±R
                 ctx.strokeStyle = style.getPropertyValue('--axis-color');
                 ctx.lineWidth = 1.5;
                 ctx.setLineDash([4, 4]);
@@ -421,8 +422,7 @@
                 ctx.beginPath(); ctx.moveTo(0, originY + unitRadius); ctx.lineTo(W, originY + unitRadius); ctx.stroke();
                 ctx.setLineDash([]);
 
-                // --- PERMANENT RADIUS LINE (center to point) ---
-                // Drawn BEFORE the ratio lines so it sits beneath them
+                // Permanent radius line (center to point)
                 ctx.strokeStyle = style.getPropertyValue('--radius-color');
                 ctx.lineWidth = 2;
                 ctx.beginPath();
@@ -430,18 +430,22 @@
                 ctx.lineTo(pX, pY);
                 ctx.stroke();
 
-                // Draw all trig ratio segments (they will overlay the radius line)
+                // Draw trig ratio segments (they overlay the radius line)
                 drawAllRatios(angleRad, values);
 
-                // Angle arc and label
+                // --- Angle arc and label (using principal angle modulo 360 for clean visual) ---
+                const principalAngleDeg = ((currentAngleDeg % 360) + 360) % 360;
+                const principalAngleRad = principalAngleDeg * Math.PI / 180;
                 ctx.strokeStyle = style.getPropertyValue('--angle-color');
                 ctx.lineWidth = 2;
                 ctx.beginPath();
-                ctx.arc(originX, originY, 40, 0, -angleRad, angleRad > 0);
+                // Draw arc from 0 to principalAngleRad (positive direction)
+                ctx.arc(originX, originY, 40, 0, -principalAngleRad, principalAngleRad > 0);
                 ctx.stroke();
                 ctx.fillStyle = style.getPropertyValue('--angle-color');
                 ctx.font = "18px Arial";
-                ctx.fillText("θ", originX + 55 * Math.cos(-angleRad / 2), originY + 55 * Math.sin(-angleRad / 2));
+                const labelAngle = -principalAngleRad / 2;
+                ctx.fillText("θ", originX + 55 * Math.cos(labelAngle), originY + 55 * Math.sin(labelAngle));
 
                 // Point on circle
                 ctx.fillStyle = style.getPropertyValue('--point-color');
@@ -449,9 +453,9 @@
                 ctx.arc(pX, pY, 10, 0, 2 * Math.PI);
                 ctx.fill();
 
-                // Update UI values
-                ui.angleValueSpan.textContent = `${parseFloat(currentAngleDeg).toFixed(1)}°`;
-                ui.angleDegTd.textContent = parseFloat(currentAngleDeg).toFixed(1);
+                // Update UI values (show actual angle, not modulo)
+                ui.angleValueSpan.textContent = `${currentAngleDeg.toFixed(1)}°`;
+                ui.angleDegTd.textContent = currentAngleDeg.toFixed(1);
                 ui.angleRadTd.textContent = angleRad.toFixed(4);
                 for (let key of ['cos', 'sin', 'tan', 'sec', 'cot', 'csc']) {
                     const val = values[key];
@@ -471,36 +475,35 @@
                 drawSimulation(angleDeg);
             }
 
-            // ---------- EVENT HANDLERS ----------
-            function getMousePos(canvasEl, evt) {
+            // ---------- EVENT HANDLERS (Continuous Rotation) ----------
+            function getMouseAngleRad(canvasEl, evt) {
                 const rect = canvasEl.getBoundingClientRect();
                 const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
                 const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
-                return { x: clientX - rect.left, y: clientY - rect.top };
+                const x = clientX - rect.left - originX;
+                const y = -(clientY - rect.top - originY);
+                return Math.atan2(y, x);
             }
 
             const onDragStart = (e) => {
-                const pos = getMousePos(canvas, e);
-                const rad = angleDeg * Math.PI / 180;
-                const px = originX + Math.cos(rad) * unitRadius;
-                const py = originY - Math.sin(rad) * unitRadius;
-                if (Math.hypot(pos.x - px, pos.y - py) < 20) {
-                    isDragging = true;
-                    canvas.style.cursor = 'grabbing';
-                    e.preventDefault();
-                }
+                e.preventDefault();
+                const mouseAngle = getMouseAngleRad(canvas, e);
+                lastMouseAngleRad = mouseAngle;
+                isDragging = true;
+                canvas.style.cursor = 'grabbing';
             };
 
             const onDragMove = (e) => {
                 if (!isDragging) return;
                 e.preventDefault();
-                const pos = getMousePos(canvas, e);
-                const dx = pos.x - originX;
-                const dy = -(pos.y - originY);
-                let newAngleRad = Math.atan2(dy, dx);
-                let newAngleDeg = newAngleRad * 180 / Math.PI;
-                if (newAngleDeg < 0) newAngleDeg += 360;
-                angleDeg = newAngleDeg;
+                const currentMouseAngle = getMouseAngleRad(canvas, e);
+                let delta = currentMouseAngle - lastMouseAngleRad;
+                // Normalize delta to the shortest angular distance (avoid large jumps)
+                if (delta > Math.PI) delta -= 2 * Math.PI;
+                if (delta < -Math.PI) delta += 2 * Math.PI;
+                const deltaDeg = delta * 180 / Math.PI;
+                angleDeg += deltaDeg;
+                lastMouseAngleRad = currentMouseAngle;
                 drawSimulation(angleDeg);
             };
 
