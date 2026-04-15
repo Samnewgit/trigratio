@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trigonometry Explorer (Dual Model)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Trigonometry Explorer – All Six Ratios</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap');
         :root {
@@ -14,6 +14,7 @@
             --axis-color: #ffffff;
             --grid-color: #444444;
             --circle-color: #ffffff;
+            --radius-color: #ffffff;
             --cos-color: #ff0000;
             --sin-color: #00ff00;
             --tan-color: #ffff00;
@@ -22,19 +23,25 @@
             --csc-color: #4db8ff;
             --point-color: #4da6ff;
             --angle-color: #ffffff;
-            --checkbox-color: #00bfff; /* Deep sky blue / cyan */
+            --checkbox-color: #00bfff;
         }
 
         body {
-            font-family: 'Space Grotesk', sans-serif; background-color: var(--bg-color); color: var(--text-color);
-            margin: 0; overflow-y: auto; /* Allow scrolling */
-            display: flex; justify-content: flex-start; align-items: center;
-            min-height: 100vh; flex-direction: column;
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            overflow-y: auto;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
         }
 
         .container {
             display: flex;
-            flex-direction: column; /* Mobile-first: stack vertically */
+            flex-direction: column;
             align-items: center;
             gap: 20px;
             padding: 10px;
@@ -46,84 +53,124 @@
             background-color: var(--canvas-bg-color);
             border: 1px solid var(--grid-color);
             cursor: grab;
-            width: 95%; /* Responsive width */
-            max-width: 700px; /* Max size like original */
+            width: 95%;
+            max-width: 700px;
             height: auto;
-            aspect-ratio: 1 / 1; /* Maintain square shape */
+            aspect-ratio: 1 / 1;
         }
 
         .controls {
-            display: flex; flex-direction: column;
-            width: 95%; /* Responsive width */
-            max-width: 500px; /* Sensible max width on mobile/tablet */
+            display: flex;
+            flex-direction: column;
+            width: 95%;
+            max-width: 500px;
             padding: 20px;
             background-color: var(--controls-bg-color);
-            border-radius: 8px; border: 1px solid #444;
+            border-radius: 8px;
+            border: 1px solid #444;
             box-sizing: border-box;
         }
         .controls h2 { margin-top: 0; text-align: center; color: var(--tan-color); }
         
-        .model-switcher { display: flex; margin-bottom: 20px; border-radius: 5px; border: 1px solid #555; overflow: hidden; }
-        .model-switcher input { display: none; }
-        .model-switcher label {
-            flex: 1; text-align: center; padding: 8px; cursor: pointer;
-            background-color: #333; transition: background-color 0.2s; user-select: none; font-size: 0.9em;
+        .slider-container, .reset-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 10px;
         }
-        .model-switcher input:checked + label { background-color: #5c5c5c; font-weight: bold; }
-
-        .slider-container, .reset-container { display: flex; flex-direction: column; align-items: center; margin-bottom: 10px; }
         .slider-container label { font-size: 1.1em; padding: 8px; }
-        #resetButton { width: 100%; padding: 8px 15px; font-size: 1em; font-weight: bold; color: var(--text-color); background-color: #333; border: 1px solid #555; border-radius: 5px; cursor: pointer; transition: background-color 0.2s; }
+        #resetButton {
+            width: 100%;
+            padding: 8px 15px;
+            font-size: 1em;
+            font-weight: bold;
+            color: var(--text-color);
+            background-color: #333;
+            border: 1px solid #555;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
         #resetButton:hover { background-color: #555; }
         
-        fieldset { border: 1px solid #444; border-radius: 5px; padding: 10px 15px; margin-top: 20px; }
+        fieldset {
+            border: 1px solid #444;
+            border-radius: 5px;
+            padding: 10px 15px;
+            margin-top: 20px;
+        }
         legend { padding: 0 10px; font-weight: bold; color: var(--text-color); }
 
-        .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        .checkbox-item { display: flex; align-items: center; font-size: 0.9em; }
-        .checkbox-item[data-model-specific] { display: none; } /* Specific items hidden by default */
-        
-        .checkbox-item input[type="checkbox"] { /* Custom checkbox style */
-            appearance: none; -webkit-appearance: none;
-            background-color: #333; border: 1px solid #777;
-            width: 16px; height: 16px; border-radius: 3px;
-            position: relative; cursor: pointer; margin-right: 8px;
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            font-size: 0.9em;
+        }
+        .checkbox-item input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            background-color: #333;
+            border: 1px solid #777;
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            position: relative;
+            cursor: pointer;
+            margin-right: 8px;
         }
         .checkbox-item input[type="checkbox"]:checked {
-            background-color: var(--checkbox-color); border-color: var(--checkbox-color);
+            background-color: var(--checkbox-color);
+            border-color: var(--checkbox-color);
         }
         .checkbox-item input[type="checkbox"]:checked::after {
-            content: '✔'; font-size: 12px; font-weight: bold; color: white;
-            position: absolute; left: 50%; top: 50%;
+            content: '✔';
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            position: absolute;
+            left: 50%;
+            top: 50%;
             transform: translate(-50%, -50%);
         }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        td { padding: 8px; text-align: left; border-bottom: 1px solid #444; }
-        td:nth-child(2) { font-family: 'Courier New', Courier, monospace; font-weight: bold; text-align: right; }
-        table tr { transition: opacity 0.3s; }
-        table tr[data-model-specific] { display: none; } /* Specific items hidden by default */
-        .color-swatch { display: inline-block; width: 12px; height: 12px; margin-right: 8px; vertical-align: middle; border: 1px solid #555; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #444;
+        }
+        td:nth-child(2) {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            text-align: right;
+        }
+        .color-swatch {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            margin-right: 8px;
+            vertical-align: middle;
+            border: 1px solid #555;
+        }
 
-        /* Desktop Layout */
         @media (min-width: 1024px) {
-            body {
-                justify-content: center;
-                overflow: hidden; /* Re-hide scrollbar on desktop */
-            }
-            .container {
-                flex-direction: row;
-                align-items: flex-start;
-                padding: 20px;
-            }
-            .controls {
-                width: 300px; /* Restore fixed width on desktop */
-            }
+            body { justify-content: center; overflow: hidden; }
+            .container { flex-direction: row; align-items: flex-start; padding: 20px; }
+            .controls { width: 300px; }
         }
     </style>
 </head>
 <body>
-
     <div class="container">
         <canvas id="trigCanvas"></canvas>
         <div class="controls">
@@ -132,34 +179,33 @@
             <div class="slider-container">
                 <label>Angle θ: <span id="angleValue">40.0°</span></label>
             </div>
-            <div class="reset-container"> <button id="resetButton">Reset </button> </div>
+            <div class="reset-container">
+                <button id="resetButton">Reset angle</button>
+            </div>
             
             <fieldset>
                 <legend>Display Ratios</legend>
                 <div class="checkbox-grid">
                     <div class="checkbox-item"><input type="checkbox" class="ratio-checkbox" id="showSin" checked><span class="color-swatch" style="background-color: var(--sin-color);"></span><label for="showSin">sin(θ)</label></div>
-                    <div class="checkbox-item"><input type="checkbox" class="ratio-checkbox" id="showCsc"><span class="color-swatch" style="background-color: var(--csc-color);"></span><label for="showCsc">csc(θ)</label></div>
+                    <div class="checkbox-item"><input type="checkbox" class="ratio-checkbox" id="showCsc" checked><span class="color-swatch" style="background-color: var(--csc-color);"></span><label for="showCsc">csc(θ)</label></div>
                     <div class="checkbox-item"><input type="checkbox" class="ratio-checkbox" id="showCos" checked><span class="color-swatch" style="background-color: var(--cos-color);"></span><label for="showCos">cos(θ)</label></div>
-                    <div class="checkbox-item"><input type="checkbox" class="ratio-checkbox" id="showSec"><span class="color-swatch" style="background-color: var(--sec-color);"></span><label for="showSec">sec(θ)</label></div>
+                    <div class="checkbox-item"><input type="checkbox" class="ratio-checkbox" id="showSec" checked><span class="color-swatch" style="background-color: var(--sec-color);"></span><label for="showSec">sec(θ)</label></div>
                     <div class="checkbox-item"><input type="checkbox" class="ratio-checkbox" id="showTan" checked><span class="color-swatch" style="background-color: var(--tan-color);"></span><label for="showTan">tan(θ)</label></div>
-                    <div class="checkbox-item"><input type="checkbox" class="ratio-checkbox" id="showCot"><span class="color-swatch" style="background-color: var(--cot-color);"></span><label for="showCot">cot(θ)</label></div>
+                    <div class="checkbox-item"><input type="checkbox" class="ratio-checkbox" id="showCot" checked><span class="color-swatch" style="background-color: var(--cot-color);"></span><label for="showCot">cot(θ)</label></div>
                 </div>
             </fieldset>
 
             <table>
                 <tbody>
-                    <tr data-ratio="angle-deg"><td>θ (degrees)</td><td id="angle-deg">40.0</td></tr>
-                    <tr data-ratio="angle-rad"><td>θ (radians)</td><td id="angle-rad">0.6981</td></tr>
-                    <tr class="table-divider"><td colspan="2" style="padding: 0;"><hr style="border-color: #444; margin: 0;"></td></tr>
-                    <!-- Common Ratios -->
+                    <tr><td>θ (degrees)</td><td id="angle-deg">40.0</td></tr>
+                    <tr><td>θ (radians)</td><td id="angle-rad">0.6981</td></tr>
+                    <tr><td colspan="2"><hr style="border-color: #444; margin: 0;"></td></tr>
                     <tr><td><span class="color-swatch" style="background-color: var(--cos-color);"></span>cos(θ)</td><td id="val-cos">0.7660</td></tr>
                     <tr><td><span class="color-swatch" style="background-color: var(--sin-color);"></span>sin(θ)</td><td id="val-sin">0.6428</td></tr>
-                    <!-- Tan/Sec Specific -->
-                    <tr data-model-specific="tan_sec"><td><span class="color-swatch" style="background-color: var(--tan-color);"></span>tan(θ)</td><td id="val-tan">0.8391</td></tr>
-                    <tr data-model-specific="tan_sec"><td><span class="color-swatch" style="background-color: var(--sec-color);"></span>sec(θ)</td><td id="val-sec">1.3054</td></tr>
-                    <!-- Cot/Csc Specific -->
-                    <tr data-model-specific="cot_csc"><td><span class="color-swatch" style="background-color: var(--cot-color);"></span>cot(θ)</td><td id="val-cot">1.1918</td></tr>
-                    <tr data-model-specific="cot_csc"><td><span class="color-swatch" style="background-color: var(--csc-color);"></span>csc(θ)</td><td id="val-csc">1.5557</td></tr>
+                    <tr><td><span class="color-swatch" style="background-color: var(--tan-color);"></span>tan(θ)</td><td id="val-tan">0.8391</td></tr>
+                    <tr><td><span class="color-swatch" style="background-color: var(--sec-color);"></span>sec(θ)</td><td id="val-sec">1.3054</td></tr>
+                    <tr><td><span class="color-swatch" style="background-color: var(--cot-color);"></span>cot(θ)</td><td id="val-cot">1.1918</td></tr>
+                    <tr><td><span class="color-swatch" style="background-color: var(--csc-color);"></span>csc(θ)</td><td id="val-csc">1.5557</td></tr>
                 </tbody>
             </table>
         </div>
@@ -170,41 +216,182 @@
             const canvas = document.getElementById('trigCanvas');
             const ctx = canvas.getContext('2d');
             const DEFAULT_ANGLE = 40;
-            let currentModel = 'tan_sec';
-            let angleDeg = DEFAULT_ANGLE; // Main state for the angle
+            let angleDeg = DEFAULT_ANGLE;
             let isDragging = false;
 
             const ui = {
                 angleValueSpan: document.getElementById('angleValue'),
                 angleDegTd: document.getElementById('angle-deg'),
                 angleRadTd: document.getElementById('angle-rad'),
-                modelSwitchers: document.querySelectorAll('input[name="model"]'),
                 resetButton: document.getElementById('resetButton'),
                 checkboxes: {
-                    cos: document.getElementById('showCos'), sin: document.getElementById('showSin'),
-                    tan: document.getElementById('showTan'), sec: document.getElementById('showSec'),
-                    cot: document.getElementById('showCot'), csc: document.getElementById('showCsc'),
+                    cos: document.getElementById('showCos'),
+                    sin: document.getElementById('showSin'),
+                    tan: document.getElementById('showTan'),
+                    sec: document.getElementById('showSec'),
+                    cot: document.getElementById('showCot'),
+                    csc: document.getElementById('showCsc'),
                 },
                 valTds: {
-                    cos: document.getElementById('val-cos'), sin: document.getElementById('val-sin'),
-                    tan: document.getElementById('val-tan'), sec: document.getElementById('val-sec'),
-                    cot: document.getElementById('val-cot'), csc: document.getElementById('val-csc'),
+                    cos: document.getElementById('val-cos'),
+                    sin: document.getElementById('val-sin'),
+                    tan: document.getElementById('val-tan'),
+                    sec: document.getElementById('val-sec'),
+                    cot: document.getElementById('val-cot'),
+                    csc: document.getElementById('val-csc'),
                 }
             };
 
-            // These will be updated on resize
             let W, H, originX, originY, unitRadius;
             const style = getComputedStyle(document.documentElement);
-            
-            function drawTanSecModel(angleRad, values) { /* ... unchanged from previous version ... */ }
-            function drawCotCscModel(angleRad, values) { /* ... unchanged from previous version ... */ }
-            
+
+            // ---------- HELPER DRAWING FUNCTIONS ----------
+            const drawArrow = (x, y, dx, dy) => {
+                const headlen = 10;
+                const angle = Math.atan2(dy, dx);
+                ctx.moveTo(x, y);
+                ctx.lineTo(x - headlen * Math.cos(angle - Math.PI / 6), y - headlen * Math.sin(angle - Math.PI / 6));
+                ctx.moveTo(x, y);
+                ctx.lineTo(x - headlen * Math.cos(angle + Math.PI / 6), y - headlen * Math.sin(angle + Math.PI / 6));
+            };
+
+            const drawAxesAndGrid = () => {
+                ctx.strokeStyle = style.getPropertyValue('--grid-color');
+                ctx.lineWidth = 0.5;
+                for (let i = -5; i <= 5; i++) {
+                    if (i === 0) continue;
+                    const x = originX + i * (unitRadius / 2);
+                    const y = originY + i * (unitRadius / 2);
+                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+                }
+                ctx.strokeStyle = style.getPropertyValue('--axis-color');
+                ctx.lineWidth = 1.5;
+                ctx.beginPath(); ctx.moveTo(0, originY); ctx.lineTo(W, originY); ctx.stroke();
+                drawArrow(W, originY, 1, 0);
+                drawArrow(0, originY, -1, 0);
+                ctx.beginPath(); ctx.moveTo(originX, 0); ctx.lineTo(originX, H); ctx.stroke();
+                drawArrow(originX, 0, 0, -1);
+                drawArrow(originX, H, 0, 1);
+            };
+
+            // Unified drawing of all six ratios based on checkboxes
+            function drawAllRatios(angleRad, values) {
+                const { cos, sin, tan, sec, cot, csc } = values;
+                const pX = originX + cos * unitRadius;
+                const pY = originY - sin * unitRadius;
+
+                // Helper to check if a value is finite and not too large to draw
+                const canDraw = (val) => isFinite(val) && Math.abs(val * unitRadius) < Math.max(W, H) * 2;
+
+                // 1. Cosine (horizontal leg)
+                if (ui.checkboxes.cos.checked && isFinite(cos)) {
+                    ctx.strokeStyle = style.getPropertyValue('--cos-color');
+                    ctx.lineWidth = 5;
+                    ctx.beginPath();
+                    ctx.moveTo(originX, originY);
+                    ctx.lineTo(pX, originY);
+                    ctx.stroke();
+                    ctx.fillStyle = ctx.strokeStyle;
+                    ctx.font = "bold 20px Arial";
+                    ctx.fillText("cos", originX + (pX - originX) / 2, originY + 25);
+                }
+
+                // 2. Sine (vertical leg)
+                if (ui.checkboxes.sin.checked && isFinite(sin)) {
+                    ctx.strokeStyle = style.getPropertyValue('--sin-color');
+                    ctx.lineWidth = 5;
+                    ctx.beginPath();
+                    ctx.moveTo(pX, originY);
+                    ctx.lineTo(pX, pY);
+                    ctx.stroke();
+                    ctx.fillStyle = ctx.strokeStyle;
+                    ctx.save();
+                    ctx.translate(pX + 15, originY + (pY - originY) / 2);
+                    ctx.fillText("sin", 0, 5);
+                    ctx.restore();
+                }
+
+                // 3. Tangent (vertical tangent line segment at x = ±R)
+                if (ui.checkboxes.tan.checked && canDraw(tan)) {
+                    const tanDir = (cos >= 0) ? 1 : -1;
+                    const tanLineX = originX + tanDir * unitRadius;
+                    const intersectY = originY - tan * tanDir * unitRadius;
+                    ctx.strokeStyle = style.getPropertyValue('--tan-color');
+                    ctx.lineWidth = 5;
+                    ctx.beginPath();
+                    ctx.moveTo(tanLineX, originY);
+                    ctx.lineTo(tanLineX, intersectY);
+                    ctx.stroke();
+                    ctx.fillStyle = ctx.strokeStyle;
+                    ctx.save();
+                    ctx.translate(tanLineX + 20 * tanDir, originY + (intersectY - originY) / 2);
+                    ctx.fillText("tan", 0, 5);
+                    ctx.restore();
+                }
+
+                // 4. Secant (line from origin to intersection on tangent line)
+                if (ui.checkboxes.sec.checked && canDraw(sec)) {
+                    const secDir = (cos >= 0) ? 1 : -1;
+                    const secLineX = originX + secDir * unitRadius;
+                    const intersectY = originY - tan * secDir * unitRadius;
+                    ctx.strokeStyle = style.getPropertyValue('--sec-color');
+                    ctx.lineWidth = 5;
+                    ctx.beginPath();
+                    ctx.moveTo(originX, originY);
+                    ctx.lineTo(secLineX, intersectY);
+                    ctx.stroke();
+                    ctx.fillStyle = ctx.strokeStyle;
+                    ctx.save();
+                    ctx.translate(originX + (secLineX - originX) / 2, originY + (intersectY - originY) / 2);
+                    ctx.rotate(-angleRad);
+                    ctx.fillText("sec", 15 * secDir, -10);
+                    ctx.restore();
+                }
+
+                // 5. Cotangent (horizontal tangent line segment at y = ±R)
+                if (ui.checkboxes.cot.checked && canDraw(cot)) {
+                    const cotDir = (sin >= 0) ? 1 : -1;
+                    const cotLineY = originY - cotDir * unitRadius;
+                    const intersectX = originX + cot * cotDir * unitRadius;
+                    ctx.strokeStyle = style.getPropertyValue('--cot-color');
+                    ctx.lineWidth = 5;
+                    ctx.beginPath();
+                    ctx.moveTo(originX, cotLineY);
+                    ctx.lineTo(intersectX, cotLineY);
+                    ctx.stroke();
+                    ctx.fillStyle = ctx.strokeStyle;
+                    ctx.fillText("cot", originX + (intersectX - originX) / 2, cotLineY - 15);
+                }
+
+                // 6. Cosecant (line from origin to intersection on horizontal tangent)
+                if (ui.checkboxes.csc.checked && canDraw(csc)) {
+                    const cscDir = (sin >= 0) ? 1 : -1;
+                    const cscLineY = originY - cscDir * unitRadius;
+                    const intersectX = originX + cot * cscDir * unitRadius;
+                    ctx.strokeStyle = style.getPropertyValue('--csc-color');
+                    ctx.lineWidth = 5;
+                    ctx.beginPath();
+                    ctx.moveTo(originX, originY);
+                    ctx.lineTo(intersectX, cscLineY);
+                    ctx.stroke();
+                    ctx.fillStyle = ctx.strokeStyle;
+                    ctx.save();
+                    ctx.translate(originX + (intersectX - originX) / 2, originY + (cscLineY - originY) / 2);
+                    ctx.rotate(-angleRad);
+                    ctx.fillText("csc", 20, -10);
+                    ctx.restore();
+                }
+            }
+
+            // ---------- MAIN DRAW FUNCTION ----------
             function drawSimulation(currentAngleDeg) {
-                if (!W) return; // Don't draw if canvas size not set
+                if (!W) return;
                 const angleRad = currentAngleDeg * Math.PI / 180;
                 const epsilon = 1e-10;
                 const values = {
-                    sin: Math.sin(angleRad), cos: Math.cos(angleRad),
+                    sin: Math.sin(angleRad),
+                    cos: Math.cos(angleRad),
                     tan: (Math.abs(Math.cos(angleRad)) < epsilon) ? Infinity : Math.tan(angleRad),
                     sec: (Math.abs(Math.cos(angleRad)) < epsilon) ? Infinity : 1 / Math.cos(angleRad),
                     cot: (Math.abs(Math.sin(angleRad)) < epsilon) ? Infinity : 1 / Math.tan(angleRad),
@@ -213,149 +400,78 @@
 
                 ctx.clearRect(0, 0, W, H);
                 drawAxesAndGrid();
-                
-                const pX = originX + values.cos * unitRadius, pY = originY - values.sin * unitRadius;
 
+                const pX = originX + values.cos * unitRadius;
+                const pY = originY - values.sin * unitRadius;
+
+                // Draw unit circle
                 ctx.strokeStyle = style.getPropertyValue('--circle-color');
-                ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(originX, originY, unitRadius, 0, 2 * Math.PI); ctx.stroke();
-                
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.arc(originX, originY, unitRadius, 0, 2 * Math.PI);
+                ctx.stroke();
+
+                // Draw vertical & horizontal lines at ±R (dashed)
                 ctx.strokeStyle = style.getPropertyValue('--axis-color');
-                ctx.lineWidth = 1.5; ctx.setLineDash([4, 4]);
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([4, 4]);
                 ctx.beginPath(); ctx.moveTo(originX + unitRadius, 0); ctx.lineTo(originX + unitRadius, H); ctx.stroke();
                 ctx.beginPath(); ctx.moveTo(originX - unitRadius, 0); ctx.lineTo(originX - unitRadius, H); ctx.stroke();
                 ctx.beginPath(); ctx.moveTo(0, originY - unitRadius); ctx.lineTo(W, originY - unitRadius); ctx.stroke();
                 ctx.beginPath(); ctx.moveTo(0, originY + unitRadius); ctx.lineTo(W, originY + unitRadius); ctx.stroke();
                 ctx.setLineDash([]);
-                
-                if (currentModel === 'tan_sec') drawTanSecModel(angleRad, values);
-                else drawCotCscModel(angleRad, values);
-                
+
+                // --- PERMANENT RADIUS LINE (center to point) ---
+                // Drawn BEFORE the ratio lines so it sits beneath them
+                ctx.strokeStyle = style.getPropertyValue('--radius-color');
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(originX, originY);
+                ctx.lineTo(pX, pY);
+                ctx.stroke();
+
+                // Draw all trig ratio segments (they will overlay the radius line)
+                drawAllRatios(angleRad, values);
+
+                // Angle arc and label
                 ctx.strokeStyle = style.getPropertyValue('--angle-color');
-                ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(originX, originY, 40, 0, -angleRad, angleRad > 0); ctx.stroke();
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(originX, originY, 40, 0, -angleRad, angleRad > 0);
+                ctx.stroke();
                 ctx.fillStyle = style.getPropertyValue('--angle-color');
-                ctx.font = "18px Arial"; ctx.fillText("θ", originX + 55 * Math.cos(-angleRad / 2), originY + 55 * Math.sin(-angleRad / 2));
+                ctx.font = "18px Arial";
+                ctx.fillText("θ", originX + 55 * Math.cos(-angleRad / 2), originY + 55 * Math.sin(-angleRad / 2));
+
+                // Point on circle
                 ctx.fillStyle = style.getPropertyValue('--point-color');
-                ctx.beginPath(); ctx.arc(pX, pY, 10, 0, 2 * Math.PI); ctx.fill();
-                
+                ctx.beginPath();
+                ctx.arc(pX, pY, 10, 0, 2 * Math.PI);
+                ctx.fill();
+
+                // Update UI values
                 ui.angleValueSpan.textContent = `${parseFloat(currentAngleDeg).toFixed(1)}°`;
                 ui.angleDegTd.textContent = parseFloat(currentAngleDeg).toFixed(1);
                 ui.angleRadTd.textContent = angleRad.toFixed(4);
-                Object.keys(ui.valTds).forEach(key => {
+                for (let key of ['cos', 'sin', 'tan', 'sec', 'cot', 'csc']) {
                     const val = values[key];
                     if (ui.valTds[key]) ui.valTds[key].textContent = isFinite(val) ? val.toFixed(4) : "undef.";
-                });
+                }
             }
-
-            function updateControlsForModel() {
-                const showModel = currentModel;
-                const hideModel = (showModel === 'tan_sec') ? 'cot_csc' : 'tan_sec';
-                document.querySelectorAll(`[data-model-specific="${showModel}"]`).forEach(el => el.style.display = '');
-                document.querySelectorAll(`[data-model-specific="${hideModel}"]`).forEach(el => el.style.display = 'none');
-            }
-
-            // --- FULL HELPER FUNCTIONS ---
-            const drawArrow = (x, y, dx, dy) => {
-                const headlen = 10; const angle = Math.atan2(dy, dx);
-                ctx.moveTo(x, y); ctx.lineTo(x - headlen * Math.cos(angle - Math.PI / 6), y - headlen * Math.sin(angle - Math.PI / 6));
-                ctx.moveTo(x, y); ctx.lineTo(x - headlen * Math.cos(angle + Math.PI / 6), y - headlen * Math.sin(angle + Math.PI / 6));
-            };
-            const drawAxesAndGrid = () => {
-                ctx.strokeStyle = style.getPropertyValue('--grid-color');
-                ctx.lineWidth = 0.5;
-                for (let i = -5; i <= 5; i++) {
-                    if (i === 0) continue;
-                    const x = originX + i * (unitRadius/2); const y = originY + i * (unitRadius/2);
-                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
-                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
-                }
-                ctx.strokeStyle = style.getPropertyValue('--axis-color');
-                ctx.lineWidth = 1.5;
-                ctx.beginPath(); ctx.moveTo(0, originY); ctx.lineTo(W, originY); ctx.stroke();
-                drawArrow(W, originY, 1, 0); drawArrow(0, originY, -1, 0);
-                ctx.beginPath(); ctx.moveTo(originX, 0); ctx.lineTo(originX, H); ctx.stroke();
-                drawArrow(originX, 0, 0, -1); drawArrow(originX, H, 0, 1);
-            };
-            drawTanSecModel = (angleRad, values) => {
-                const { cos, sin, tan, sec } = values;
-                const pX = originX + cos * unitRadius, pY = originY - sin * unitRadius;
-                const tan_line_x_unit = (cos >= 0) ? 1 : -1;
-                const tan_line_x_pixels = originX + tan_line_x_unit * unitRadius;
-                const intersection_y = originY - (tan * tan_line_x_unit) * unitRadius;
-                const canDraw = isFinite(tan) && Math.abs(tan * unitRadius) < H * 2;
-                if (ui.checkboxes.sec.checked && canDraw) {
-                    ctx.strokeStyle = style.getPropertyValue('--sec-color'); ctx.lineWidth = 5;
-                    ctx.beginPath(); ctx.moveTo(originX, originY); ctx.lineTo(tan_line_x_pixels, intersection_y); ctx.stroke();
-                    ctx.fillStyle = ctx.strokeStyle; ctx.font = "bold 20px Arial";
-                    ctx.save(); ctx.translate(originX + (tan_line_x_pixels - originX) / 2, originY + (intersection_y - originY) / 2);
-                    ctx.rotate(-angleRad); ctx.fillText("sec", 15 * tan_line_x_unit, -10); ctx.restore();
-                } else {
-                    ctx.strokeStyle = style.getPropertyValue('--angle-color'); ctx.lineWidth = 2;
-                    ctx.beginPath(); ctx.moveTo(originX, originY); ctx.lineTo(pX, pY); ctx.stroke();
-                }
-                ctx.lineWidth = 5; ctx.font = "bold 20px Arial"; ctx.textAlign = 'center';
-                if (ui.checkboxes.cos.checked) {
-                    ctx.strokeStyle = style.getPropertyValue('--cos-color'); ctx.beginPath(); ctx.moveTo(originX, originY); ctx.lineTo(pX, originY); ctx.stroke();
-                    ctx.fillStyle = ctx.strokeStyle; ctx.fillText("cos", originX + (pX - originX) / 2, originY + 25);
-                }
-                if (ui.checkboxes.sin.checked) {
-                    ctx.strokeStyle = style.getPropertyValue('--sin-color'); ctx.beginPath(); ctx.moveTo(pX, originY); ctx.lineTo(pX, pY); ctx.stroke();
-                    ctx.fillStyle = ctx.strokeStyle; ctx.save(); ctx.translate(pX + 15, originY + (pY - originY) / 2); ctx.fillText("sin", 0, 5); ctx.restore();
-                }
-                if (ui.checkboxes.tan.checked && canDraw) {
-                    ctx.strokeStyle = style.getPropertyValue('--tan-color'); ctx.beginPath(); ctx.moveTo(tan_line_x_pixels, originY); ctx.lineTo(tan_line_x_pixels, intersection_y); ctx.stroke();
-                    ctx.fillStyle = ctx.strokeStyle; ctx.save(); ctx.translate(tan_line_x_pixels + 20 * tan_line_x_unit, originY + (intersection_y - originY)/2); ctx.fillText("tan", 0, 5); ctx.restore();
-                }
-            };
-            drawCotCscModel = (angleRad, values) => {
-                const { cos, sin, cot, csc } = values;
-                const pX = originX + cos * unitRadius, pY = originY - sin * unitRadius;
-                const tan_line_y_unit = (sin >= 0) ? 1 : -1;
-                const tan_line_y_pixels = originY - tan_line_y_unit * unitRadius;
-                const intersection_x = originX + (cot * tan_line_y_unit) * unitRadius;
-                const canDraw = isFinite(cot) && Math.abs(cot * unitRadius) < W * 2;
-                if (ui.checkboxes.csc.checked && canDraw) {
-                    ctx.strokeStyle = style.getPropertyValue('--csc-color'); ctx.lineWidth = 5;
-                    ctx.beginPath(); ctx.moveTo(originX, originY); ctx.lineTo(intersection_x, tan_line_y_pixels); ctx.stroke();
-                    ctx.fillStyle = ctx.strokeStyle; ctx.font = "bold 20px Arial";
-                    ctx.save(); ctx.translate(originX + (intersection_x - originX) / 2, originY + (tan_line_y_pixels - originY) / 2);
-                    ctx.rotate(-angleRad); ctx.fillText("cosec", 20, -10); ctx.restore();
-                } else {
-                     ctx.strokeStyle = style.getPropertyValue('--angle-color'); ctx.lineWidth = 2;
-                     ctx.beginPath(); ctx.moveTo(originX, originY); ctx.lineTo(pX, pY); ctx.stroke();
-                }
-                ctx.lineWidth = 5; ctx.font = "bold 20px Arial"; ctx.textAlign = 'center';
-                if (ui.checkboxes.cos.checked) {
-                    ctx.strokeStyle = style.getPropertyValue('--cos-color'); ctx.beginPath(); ctx.moveTo(originX, pY); ctx.lineTo(pX, pY); ctx.stroke();
-                    ctx.fillStyle = ctx.strokeStyle; ctx.fillText("cos", originX + (pX - originX) / 2, pY - 10);
-                }
-                if (ui.checkboxes.sin.checked) {
-                    ctx.strokeStyle = style.getPropertyValue('--sin-color'); ctx.beginPath(); ctx.moveTo(originX, originY); ctx.lineTo(originX, pY); ctx.stroke();
-                    ctx.fillStyle = ctx.strokeStyle; ctx.fillText("sin", originX - 25, originY + (pY-originY)/2);
-                }
-                if (ui.checkboxes.cot.checked && canDraw) {
-                    ctx.strokeStyle = style.getPropertyValue('--cot-color'); ctx.beginPath(); ctx.moveTo(originX, tan_line_y_pixels); ctx.lineTo(intersection_x, tan_line_y_pixels); ctx.stroke();
-                    ctx.fillStyle = ctx.strokeStyle; ctx.fillText("cot", originX + (intersection_x - originX)/2, tan_line_y_pixels - 15);
-                }
-            };
 
             function setupAndResizeCanvas() {
-                // Get the display size of the canvas from CSS
                 const size = canvas.getBoundingClientRect().width;
-                // Set the rendering resolution to match the display size
                 canvas.width = size;
                 canvas.height = size;
-                
-                // Update global dimension variables
                 W = canvas.width;
                 H = canvas.height;
                 originX = W / 2;
                 originY = H / 2;
                 unitRadius = W / 3.5;
-
-                drawSimulation(angleDeg); // Redraw with new dimensions
+                drawSimulation(angleDeg);
             }
 
-            // --- Event Listeners ---
+            // ---------- EVENT HANDLERS ----------
             function getMousePos(canvasEl, evt) {
                 const rect = canvasEl.getBoundingClientRect();
                 const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
@@ -365,19 +481,19 @@
 
             const onDragStart = (e) => {
                 const pos = getMousePos(canvas, e);
-                const currentAngleRad = angleDeg * Math.PI / 180;
-                const pX = originX + Math.cos(currentAngleRad) * unitRadius;
-                const pY = originY - Math.sin(currentAngleRad) * unitRadius;
-                const dist = Math.hypot(pos.x - pX, pos.y - pY);
-                if (dist < 20) { // Increased hit area for touch
+                const rad = angleDeg * Math.PI / 180;
+                const px = originX + Math.cos(rad) * unitRadius;
+                const py = originY - Math.sin(rad) * unitRadius;
+                if (Math.hypot(pos.x - px, pos.y - py) < 20) {
                     isDragging = true;
                     canvas.style.cursor = 'grabbing';
+                    e.preventDefault();
                 }
             };
 
             const onDragMove = (e) => {
                 if (!isDragging) return;
-                e.preventDefault(); // Prevent scrolling on mobile while dragging
+                e.preventDefault();
                 const pos = getMousePos(canvas, e);
                 const dx = pos.x - originX;
                 const dy = -(pos.y - originY);
@@ -387,36 +503,30 @@
                 angleDeg = newAngleDeg;
                 drawSimulation(angleDeg);
             };
-            
+
             const onDragEnd = () => {
                 isDragging = false;
                 canvas.style.cursor = 'grab';
             };
 
-            // Mouse events
             canvas.addEventListener('mousedown', onDragStart);
             canvas.addEventListener('mousemove', onDragMove);
             canvas.addEventListener('mouseup', onDragEnd);
             canvas.addEventListener('mouseleave', onDragEnd);
-            // Touch events for mobile
-            canvas.addEventListener('touchstart', onDragStart, { passive: true });
+            canvas.addEventListener('touchstart', onDragStart, { passive: false });
             canvas.addEventListener('touchmove', onDragMove, { passive: false });
             canvas.addEventListener('touchend', onDragEnd);
 
-            ui.resetButton.addEventListener('click', () => { angleDeg = DEFAULT_ANGLE; drawSimulation(angleDeg); });
-            ui.modelSwitchers.forEach(switcher => {
-                switcher.addEventListener('change', (e) => {
-                    currentModel = e.target.value;
-                    updateControlsForModel();
-                    drawSimulation(angleDeg);
-                });
+            ui.resetButton.addEventListener('click', () => {
+                angleDeg = DEFAULT_ANGLE;
+                drawSimulation(angleDeg);
             });
+
             Object.values(ui.checkboxes).forEach(cb => cb.addEventListener('change', () => drawSimulation(angleDeg)));
 
-            // --- Initial State ---
+            // Initial setup
             window.addEventListener('resize', setupAndResizeCanvas);
-            updateControlsForModel();
-            setupAndResizeCanvas(); // Initial call to set size and draw
+            setupAndResizeCanvas();
         });
     </script>
 </body>
